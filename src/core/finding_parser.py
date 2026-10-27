@@ -82,16 +82,26 @@ class FindingParser:
             detail = payload["detail"]
 
             if "GuardDuty" in detail_type or "aws.guardduty" in source:
-                return [FindingParser._parse_guardduty_detail(detail, source or "aws.guardduty")]
+                return [
+                    FindingParser._parse_guardduty_detail(
+                        detail, source or "aws.guardduty"
+                    )
+                ]
 
             if "Security Hub" in detail_type or "aws.securityhub" in source:
                 findings_list = detail.get("findings", [])
                 if findings_list:
                     return [
-                        FindingParser._parse_securityhub_finding(f, source or "aws.securityhub")
+                        FindingParser._parse_securityhub_finding(
+                            f, source or "aws.securityhub"
+                        )
                         for f in findings_list
                     ]
-                return [FindingParser._parse_securityhub_finding(detail, source or "aws.securityhub")]
+                return [
+                    FindingParser._parse_securityhub_finding(
+                        detail, source or "aws.securityhub"
+                    )
+                ]
 
         # Case 2: Security Hub ASFF list under "findings"
         if "findings" in payload and isinstance(payload["findings"], list):
@@ -106,7 +116,9 @@ class FindingParser:
 
         # Case 4: Direct Security Hub finding
         if "SchemaVersion" in payload and "Id" in payload and "ProductArn" in payload:
-            return [FindingParser._parse_securityhub_finding(payload, "aws.securityhub")]
+            return [
+                FindingParser._parse_securityhub_finding(payload, "aws.securityhub")
+            ]
 
         # Case 5: Simulation or custom format
         return [FindingParser._parse_custom_finding(payload)]
@@ -159,12 +171,18 @@ class FindingParser:
             principal_type = access_key_details.get("userType", "IAMUser")
             resource_id = user_name
             resource_arn = f"arn:aws:iam::{account_id}:user/{user_name}"
-            resource_type = "AwsIamUser" if principal_type == "IAMUser" else "AwsIamRole"
+            resource_type = (
+                "AwsIamUser" if principal_type == "IAMUser" else "AwsIamRole"
+            )
             if key_id:
                 resource_tags["AccessKeyId"] = key_id
 
         elif resource_type == "S3Bucket":
-            s3_details = resource.get("s3BucketDetails", [{}])[0] if resource.get("s3BucketDetails") else {}
+            s3_details = (
+                resource.get("s3BucketDetails", [{}])[0]
+                if resource.get("s3BucketDetails")
+                else {}
+            )
             resource_id = s3_details.get("name", "unknown-bucket")
             resource_arn = s3_details.get("arn", f"arn:aws:s3:::{resource_id}")
             resource_type = "AwsS3Bucket"
@@ -180,9 +198,13 @@ class FindingParser:
         remote_ip = network_connection.get("remoteIpDetails", {})
         threat_actor_ip = remote_ip.get("ipAddressV4")
         country_info = remote_ip.get("country", {})
-        threat_actor_country = country_info.get("countryName") if isinstance(country_info, dict) else None
+        threat_actor_country = (
+            country_info.get("countryName") if isinstance(country_info, dict) else None
+        )
         city_info = remote_ip.get("city", {})
-        threat_actor_city = city_info.get("cityName") if isinstance(city_info, dict) else None
+        threat_actor_city = (
+            city_info.get("cityName") if isinstance(city_info, dict) else None
+        )
 
         is_production = any(
             k.lower() == "environment" and v.lower() in ["prod", "production"]
@@ -212,7 +234,9 @@ class FindingParser:
         )
 
     @staticmethod
-    def _parse_securityhub_finding(finding: Dict[str, Any], source: str) -> SecurityFinding:
+    def _parse_securityhub_finding(
+        finding: Dict[str, Any], source: str
+    ) -> SecurityFinding:
         """Parses AWS Security Finding Format (ASFF)."""
         finding_id = finding.get("Id", "unknown-sh-id")
         finding_type = (
@@ -289,16 +313,26 @@ class FindingParser:
         score = float(data.get("severity_score", severity_scores.get(severity, 50.0)))
 
         return SecurityFinding(
-            finding_id=data.get("finding_id", f"soar-sim-{int(datetime.now(timezone.utc).timestamp())}"),
+            finding_id=data.get(
+                "finding_id", f"soar-sim-{int(datetime.now(timezone.utc).timestamp())}"
+            ),
             source=data.get("source", "simulation"),
-            finding_type=data.get("finding_type", "UnauthorizedAccess:IAMUser/InstanceCredentialExfiltration"),
+            finding_type=data.get(
+                "finding_type",
+                "UnauthorizedAccess:IAMUser/InstanceCredentialExfiltration",
+            ),
             title=data.get("title", "Simulated Incident Finding"),
-            description=data.get("description", "Simulated security event for automated containment testing."),
+            description=data.get(
+                "description",
+                "Simulated security event for automated containment testing.",
+            ),
             severity=severity,
             severity_score=score,
             resource_type=data.get("resource_type", "AwsIamUser"),
             resource_id=data.get("resource_id", "dev-compromised-user"),
-            resource_arn=data.get("resource_arn", "arn:aws:iam::123456789012:user/dev-compromised-user"),
+            resource_arn=data.get(
+                "resource_arn", "arn:aws:iam::123456789012:user/dev-compromised-user"
+            ),
             account_id=data.get("account_id", "123456789012"),
             region=data.get("region", "us-east-1"),
             created_at=data.get("created_at", datetime.now(timezone.utc).isoformat()),

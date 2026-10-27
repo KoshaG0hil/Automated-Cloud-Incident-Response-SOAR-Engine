@@ -1,6 +1,7 @@
 """Unit tests for Ec2RemediationHandler with moto."""
 
 import boto3
+
 from src.core.finding_parser import SecurityFinding
 from src.handlers.ec2_handler import Ec2RemediationHandler
 
@@ -46,7 +47,9 @@ def test_ec2_quarantine_live_mock(mocked_aws):
     assert result.quarantine_applied is True
 
     # Verify instance was moved to isolation security group
-    desc = ec2.describe_instances(InstanceIds=[instance_id])["Reservations"][0]["Instances"][0]
+    desc = ec2.describe_instances(InstanceIds=[instance_id])["Reservations"][0][
+        "Instances"
+    ][0]
     assigned_sgs = [g["GroupName"] for g in desc.get("SecurityGroups", [])]
     assert Ec2RemediationHandler.ISOLATION_SG_NAME in assigned_sgs
 

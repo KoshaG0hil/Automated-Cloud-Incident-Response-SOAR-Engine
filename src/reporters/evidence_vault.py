@@ -3,13 +3,14 @@ Forensic Evidence Vault & Chain-of-Custody Packager.
 Generates cryptographically hashed (SHA-256) incident audit records and archives them to Amazon S3.
 """
 
-from dataclasses import dataclass
-from datetime import datetime, timezone
 import hashlib
 import json
 import logging
+from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional
+
 import boto3
 from botocore.exceptions import ClientError
 
@@ -94,7 +95,9 @@ class EvidenceVault:
 
     def save_local(self, report: IncidentAuditReport) -> Path:
         """Saves report to local directory."""
-        filename = f"evidence_{report.incident_id.replace(':', '_').replace('/', '_')}.json"
+        filename = (
+            f"evidence_{report.incident_id.replace(':', '_').replace('/', '_')}.json"
+        )
         target_path = self.local_output_dir / filename
         with open(target_path, "w", encoding="utf-8") as f:
             json.dump(report.to_dict(), f, indent=2)

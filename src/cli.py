@@ -5,8 +5,8 @@ Provides realistic incident simulations, triage investigation, playbook inspecti
 
 import argparse
 import json
-from pathlib import Path
 import sys
+from pathlib import Path
 
 # Ensure UTF-8 output on Windows consoles
 if sys.platform == "win32":
@@ -17,8 +17,8 @@ if sys.platform == "win32":
         pass
 
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
+from rich.table import Table
 
 from .orchestrator.state_machine import SoarStateMachine
 
@@ -86,7 +86,10 @@ SIMULATED_SCENARIOS = {
         "account_id": "123456789012",
         "region": "us-east-1",
         "threat_actor_ip": "192.0.2.105",
-        "resource_tags": {"Environment": "Production", "DataClassification": "Confidential"},
+        "resource_tags": {
+            "Environment": "Production",
+            "DataClassification": "Confidential",
+        },
         "is_production": True,
     },
 }
@@ -99,7 +102,11 @@ def render_banner():
 def cmd_playbooks(args):
     """List available playbooks and active triggers."""
     playbooks_dir = Path(__file__).resolve().parent.parent / "playbooks"
-    table = Table(title="[Active Incident Response Containment Playbooks]", show_header=True, header_style="bold magenta")
+    table = Table(
+        title="[Active Incident Response Containment Playbooks]",
+        show_header=True,
+        header_style="bold magenta",
+    )
     table.add_column("Playbook ID", style="cyan", width=18)
     table.add_column("Name", style="white", width=34)
     table.add_column("Severity Threshold", style="yellow", width=18)
@@ -134,44 +141,67 @@ def cmd_simulate(args):
 
     for sc_name in scenarios_to_run:
         if sc_name not in SIMULATED_SCENARIOS:
-            console.print(f"[bold red]Unknown scenario '{sc_name}'. Available: {list(SIMULATED_SCENARIOS.keys())}[/bold red]")
+            console.print(
+                f"[bold red]Unknown scenario '{sc_name}'. Available: {list(SIMULATED_SCENARIOS.keys())}[/bold red]"
+            )
             continue
 
         raw_finding = SIMULATED_SCENARIOS[sc_name]
-        console.print(Panel(
-            f"[bold yellow]Simulating Incident Vector:[/bold yellow] [bold white]{sc_name.upper()}[/bold white]\n"
-            f"[dim]Resource: {raw_finding['resource_type']} -> {raw_finding['resource_id']}[/dim]\n"
-            f"[dim]Threat Type: {raw_finding['finding_type']}[/dim]\n"
-            f"[dim]Mode: {'DRY-RUN (Safe Simulation)' if args.dry_run else 'ACTIVE AWS EXECUTION'}[/dim]",
-            title="[Scenario Trigger]",
-            border_style="cyan"
-        ))
+        console.print(
+            Panel(
+                f"[bold yellow]Simulating Incident Vector:[/bold yellow] [bold white]{sc_name.upper()}[/bold white]\n"
+                f"[dim]Resource: {raw_finding['resource_type']} -> {raw_finding['resource_id']}[/dim]\n"
+                f"[dim]Threat Type: {raw_finding['finding_type']}[/dim]\n"
+                f"[dim]Mode: {'DRY-RUN (Safe Simulation)' if args.dry_run else 'ACTIVE AWS EXECUTION'}[/dim]",
+                title="[Scenario Trigger]",
+                border_style="cyan",
+            )
+        )
 
         results = engine.process_event(raw_finding)
 
         for res in results:
             # Triage & MITRE Table
-            triage_table = Table(show_header=True, header_style="bold green", title="[Triage & Threat Intelligence]")
+            triage_table = Table(
+                show_header=True,
+                header_style="bold green",
+                title="[Triage & Threat Intelligence]",
+            )
             triage_table.add_column("Field", style="cyan")
             triage_table.add_column("Value", style="white")
 
             triage_table.add_row("Incident ID", res.finding.finding_id)
-            triage_table.add_row("Priority Tier", f"[bold red]{res.triage.priority.value}[/bold red]")
+            triage_table.add_row(
+                "Priority Tier", f"[bold red]{res.triage.priority.value}[/bold red]"
+            )
             triage_table.add_row("Risk Score", f"{res.triage.composite_score} / 100.0")
             triage_table.add_row("Blast Radius", res.triage.blast_radius)
-            triage_table.add_row("MITRE Tactic", f"{res.mitre.tactic} ({res.mitre.tactic_id})")
-            triage_table.add_row("MITRE Technique", f"{res.mitre.technique} ({res.mitre.technique_id})")
-            triage_table.add_row("Threat Actor IP", f"{res.finding.threat_actor_ip} ({res.finding.threat_actor_country or 'Unknown'})")
+            triage_table.add_row(
+                "MITRE Tactic", f"{res.mitre.tactic} ({res.mitre.tactic_id})"
+            )
+            triage_table.add_row(
+                "MITRE Technique", f"{res.mitre.technique} ({res.mitre.technique_id})"
+            )
+            triage_table.add_row(
+                "Threat Actor IP",
+                f"{res.finding.threat_actor_ip} ({res.finding.threat_actor_country or 'Unknown'})",
+            )
             console.print(triage_table)
 
             # Containment Actions Table
-            actions_table = Table(show_header=True, header_style="bold blue", title="[Automated Containment Actions]")
+            actions_table = Table(
+                show_header=True,
+                header_style="bold blue",
+                title="[Automated Containment Actions]",
+            )
             actions_table.add_column("Action Step", style="bold")
             actions_table.add_column("Execution Status", style="green")
             actions_table.add_column("Details", style="dim")
 
             for act in res.containment.actions_executed:
-                status_color = "green" if act.status in ["SUCCESS", "DRY_RUN"] else "red"
+                status_color = (
+                    "green" if act.status in ["SUCCESS", "DRY_RUN"] else "red"
+                )
                 actions_table.add_row(
                     act.action_name,
                     f"[{status_color}]{act.status}[/{status_color}]",
@@ -180,13 +210,15 @@ def cmd_simulate(args):
             console.print(actions_table)
 
             # Forensic Evidence Box
-            console.print(Panel(
-                f"[bold green]Tamper-Evident SHA-256 Digest:[/bold green] [cyan]{res.evidence_report.sha256_checksum}[/cyan]\n"
-                f"[bold green]Local Evidence Archive:[/bold green] {res.local_evidence_path}\n"
-                f"[bold green]Execution Latency:[/bold green] {res.execution_duration_ms} ms",
-                title="[Forensic Chain of Custody]",
-                border_style="green"
-            ))
+            console.print(
+                Panel(
+                    f"[bold green]Tamper-Evident SHA-256 Digest:[/bold green] [cyan]{res.evidence_report.sha256_checksum}[/cyan]\n"
+                    f"[bold green]Local Evidence Archive:[/bold green] {res.local_evidence_path}\n"
+                    f"[bold green]Execution Latency:[/bold green] {res.execution_duration_ms} ms",
+                    title="[Forensic Chain of Custody]",
+                    border_style="green",
+                )
+            )
             console.print("\n" + "=" * 70 + "\n")
 
 
@@ -203,20 +235,30 @@ def cmd_investigate(args):
     engine = SoarStateMachine(dry_run=args.dry_run)
     results = engine.process_event(data)
 
-    console.print(f"[bold green]Processed {len(results)} findings from {filepath.name}[/bold green]")
+    console.print(
+        f"[bold green]Processed {len(results)} findings from {filepath.name}[/bold green]"
+    )
     for r in results:
-        console.print(f"Incident: {r.finding.finding_id} | Priority: {r.triage.priority.value} | Contained: {r.containment.success}")
+        console.print(
+            f"Incident: {r.finding.finding_id} | Priority: {r.triage.priority.value} | Contained: {r.containment.success}"
+        )
 
 
 def main():
-    parser = argparse.ArgumentParser(description="AWS Cloud Incident Response & Threat Hunting SOAR Engine")
+    parser = argparse.ArgumentParser(
+        description="AWS Cloud Incident Response & Threat Hunting SOAR Engine"
+    )
     subparsers = parser.add_subparsers(dest="command", help="Available subcommands")
 
     # Command: playbooks
-    subparsers.add_parser("playbooks", help="List active incident response containment playbooks")
+    subparsers.add_parser(
+        "playbooks", help="List active incident response containment playbooks"
+    )
 
     # Command: simulate
-    sim_parser = subparsers.add_parser("simulate", help="Run realistic attack simulations")
+    sim_parser = subparsers.add_parser(
+        "simulate", help="Run realistic attack simulations"
+    )
     sim_parser.add_argument(
         "--scenario",
         choices=["all", "iam_exfiltration", "ec2_cryptominer", "s3_leak"],
@@ -235,12 +277,18 @@ def main():
         action="store_false",
         help="Execute active changes against real AWS resources",
     )
-    sim_parser.add_argument("--s3-bucket", help="Target S3 bucket for evidence archival")
-    sim_parser.add_argument("--sns-topic", help="Target SNS topic ARN for incident alerts")
+    sim_parser.add_argument(
+        "--s3-bucket", help="Target S3 bucket for evidence archival"
+    )
+    sim_parser.add_argument(
+        "--sns-topic", help="Target SNS topic ARN for incident alerts"
+    )
     sim_parser.add_argument("--slack-webhook", help="Slack webhook URL for alerts")
 
     # Command: investigate
-    inv_parser = subparsers.add_parser("investigate", help="Investigate a custom finding JSON")
+    inv_parser = subparsers.add_parser(
+        "investigate", help="Investigate a custom finding JSON"
+    )
     inv_parser.add_argument("file", help="Path to input finding JSON file")
     inv_parser.add_argument("--dry-run", action="store_true", default=True)
 

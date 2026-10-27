@@ -3,11 +3,12 @@ Alert Dispatcher Module.
 Dispatches high-fidelity incident containment alerts to Amazon SNS topics and Slack webhooks.
 """
 
-from dataclasses import dataclass
 import json
 import logging
 import urllib.request
+from dataclasses import dataclass
 from typing import Any, Dict, Optional
+
 import boto3
 from botocore.exceptions import ClientError
 
@@ -115,12 +116,30 @@ class AlertDispatcher:
                             {
                                 "type": "section",
                                 "fields": [
-                                    {"type": "mrkdwn", "text": f"*Incident ID:*\n`{alert.incident_id}`"},
-                                    {"type": "mrkdwn", "text": f"*Risk Score:*\n*{alert.composite_score} / 100*"},
-                                    {"type": "mrkdwn", "text": f"*Resource:*\n`{alert.resource_id}`"},
-                                    {"type": "mrkdwn", "text": f"*Status:*\n*{alert.containment_status}*"},
-                                    {"type": "mrkdwn", "text": f"*Finding:*\n_{alert.finding_type}_"},
-                                    {"type": "mrkdwn", "text": f"*MITRE:*\n{alert.mitre_tactic} ({alert.mitre_technique})"},
+                                    {
+                                        "type": "mrkdwn",
+                                        "text": f"*Incident ID:*\n`{alert.incident_id}`",
+                                    },
+                                    {
+                                        "type": "mrkdwn",
+                                        "text": f"*Risk Score:*\n*{alert.composite_score} / 100*",
+                                    },
+                                    {
+                                        "type": "mrkdwn",
+                                        "text": f"*Resource:*\n`{alert.resource_id}`",
+                                    },
+                                    {
+                                        "type": "mrkdwn",
+                                        "text": f"*Status:*\n*{alert.containment_status}*",
+                                    },
+                                    {
+                                        "type": "mrkdwn",
+                                        "text": f"*Finding:*\n_{alert.finding_type}_",
+                                    },
+                                    {
+                                        "type": "mrkdwn",
+                                        "text": f"*MITRE:*\n{alert.mitre_tactic} ({alert.mitre_technique})",
+                                    },
                                 ],
                             },
                         ],

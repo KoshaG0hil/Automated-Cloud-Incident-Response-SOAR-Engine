@@ -65,7 +65,9 @@ def test_parse_securityhub_asff_event():
                     "Id": "arn:aws:securityhub:us-east-1:123456789012:finding/s3-pub-1",
                     "ProductArn": "arn:aws:securityhub:us-east-1::product/aws/securityhub",
                     "AwsAccountId": "123456789012",
-                    "Types": ["Software and Configuration Checks/AWS Security Best Practices"],
+                    "Types": [
+                        "Software and Configuration Checks/AWS Security Best Practices"
+                    ],
                     "Title": "S3.1 S3 Block Public Access setting should be enabled",
                     "Description": "Bucket is publicly accessible",
                     "Severity": {"Label": "CRITICAL", "Normalized": 90.0},

@@ -5,6 +5,7 @@ Automated host isolation, forensic EBS snapshot acquisition, and security group 
 
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
+
 import boto3
 from botocore.exceptions import ClientError
 
@@ -17,7 +18,12 @@ class Ec2RemediationHandler(BaseRemediationHandler):
 
     ISOLATION_SG_NAME = "SOAR-ZeroTrust-Isolation-SG"
 
-    def __init__(self, dry_run: bool = False, session: Optional[boto3.Session] = None, region: str = "us-east-1"):
+    def __init__(
+        self,
+        dry_run: bool = False,
+        session: Optional[boto3.Session] = None,
+        region: str = "us-east-1",
+    ):
         super().__init__(dry_run=dry_run, session=session)
         self.region = region
         self.ec2_client = (
@@ -136,10 +142,19 @@ class Ec2RemediationHandler(BaseRemediationHandler):
                                 "ResourceType": "snapshot",
                                 "Tags": [
                                     {"Key": "SOAR_ForensicSnapshot", "Value": "true"},
-                                    {"Key": "SOAR_IncidentId", "Value": finding.finding_id},
-                                    {"Key": "SOAR_SourceInstance", "Value": instance_id},
+                                    {
+                                        "Key": "SOAR_IncidentId",
+                                        "Value": finding.finding_id,
+                                    },
+                                    {
+                                        "Key": "SOAR_SourceInstance",
+                                        "Value": instance_id,
+                                    },
                                     {"Key": "SOAR_SourceVolume", "Value": vol_id},
-                                    {"Key": "ChainOfCustodyTimestamp", "Value": now_str},
+                                    {
+                                        "Key": "ChainOfCustodyTimestamp",
+                                        "Value": now_str,
+                                    },
                                 ],
                             }
                         ],
@@ -154,7 +169,9 @@ class Ec2RemediationHandler(BaseRemediationHandler):
                     action_name="CreateForensicEBSSnapshots",
                     status="SUCCESS" if snapshot_ids else "FAILED",
                     details={"created_snapshots": snapshot_ids},
-                    error=None if snapshot_ids else "Failed to capture volume snapshots",
+                    error=None
+                    if snapshot_ids
+                    else "Failed to capture volume snapshots",
                 )
             )
 
@@ -170,7 +187,10 @@ class Ec2RemediationHandler(BaseRemediationHandler):
                 RemediationAction(
                     action_name="EnsureIsolationSecurityGroup",
                     status="DRY_RUN",
-                    details={"isolation_sg_id": isolation_sg_id, "rules": "0 Ingress, 0 Egress"},
+                    details={
+                        "isolation_sg_id": isolation_sg_id,
+                        "rules": "0 Ingress, 0 Egress",
+                    },
                 )
             )
         else:
@@ -211,7 +231,10 @@ class Ec2RemediationHandler(BaseRemediationHandler):
                     RemediationAction(
                         action_name="EnsureIsolationSecurityGroup",
                         status="SUCCESS",
-                        details={"isolation_sg_id": isolation_sg_id, "mode": "Zero-Ingress-Zero-Egress"},
+                        details={
+                            "isolation_sg_id": isolation_sg_id,
+                            "mode": "Zero-Ingress-Zero-Egress",
+                        },
                     )
                 )
             except ClientError as e:
@@ -257,7 +280,9 @@ class Ec2RemediationHandler(BaseRemediationHandler):
                         )
                     )
                 except ClientError as e:
-                    self.logger.error(f"Failed to swap security groups on {instance_id}: {e}")
+                    self.logger.error(
+                        f"Failed to swap security groups on {instance_id}: {e}"
+                    )
                     actions.append(
                         RemediationAction(
                             action_name="SwapInstanceSecurityGroups",

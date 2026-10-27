@@ -1,6 +1,7 @@
 """Unit tests for S3RemediationHandler with moto."""
 
 import boto3
+
 from src.core.finding_parser import SecurityFinding
 from src.handlers.s3_handler import S3RemediationHandler
 
@@ -32,7 +33,9 @@ def test_s3_lockdown_live_mock(mocked_aws):
     assert result.quarantine_applied is True
 
     # Verify Public Access Block was enforced
-    pab = s3.get_public_access_block(Bucket=bucket_name)["PublicAccessBlockConfiguration"]
+    pab = s3.get_public_access_block(Bucket=bucket_name)[
+        "PublicAccessBlockConfiguration"
+    ]
     assert pab["BlockPublicAcls"] is True
     assert pab["IgnorePublicAcls"] is True
     assert pab["BlockPublicPolicy"] is True

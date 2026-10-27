@@ -3,11 +3,11 @@ Base Remediation Handler.
 Abstract interface with dry-run support, action tracking, and structured audit logs.
 """
 
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
-import logging
 
 logger = logging.getLogger("soar.handler")
 

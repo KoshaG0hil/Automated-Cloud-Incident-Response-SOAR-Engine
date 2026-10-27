@@ -1,8 +1,9 @@
 """End-to-end integration tests for SoarStateMachine and Lambda handler."""
 
 import json
-from src.orchestrator.state_machine import SoarStateMachine
+
 from src.lambda_handler import lambda_handler
+from src.orchestrator.state_machine import SoarStateMachine
 
 
 def test_state_machine_end_to_end_simulation():

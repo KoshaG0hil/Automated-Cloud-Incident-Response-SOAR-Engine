@@ -165,7 +165,9 @@ class MitreMapper:
         # Partial matching by namespace prefix
         if "IAMUser" in finding_type or "IAMRole" in finding_type:
             if "Credential" in finding_type or "Token" in finding_type:
-                return cls._MAPPINGS["UnauthorizedAccess:IAMUser/InstanceCredentialExfiltration"]
+                return cls._MAPPINGS[
+                    "UnauthorizedAccess:IAMUser/InstanceCredentialExfiltration"
+                ]
             if "Stealth" in finding_type or "Disabled" in finding_type:
                 return cls._MAPPINGS["Stealth:IAMUser/CloudTrailLoggingDisabled"]
             return cls._MAPPINGS["UnauthorizedAccess:IAMUser/ConsoleLoginSuccessNotice"]

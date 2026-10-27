@@ -1,6 +1,7 @@
 """Unit tests for IamRemediationHandler with moto."""
 
 import boto3
+
 from src.core.finding_parser import SecurityFinding
 from src.handlers.iam_handler import IamRemediationHandler
 

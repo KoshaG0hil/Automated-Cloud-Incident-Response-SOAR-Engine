@@ -5,7 +5,8 @@ Calculates compound risk score, blast radius, and assigns operational priority t
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, Any
+from typing import Any, Dict
+
 from .finding_parser import SecurityFinding
 
 
@@ -65,7 +66,10 @@ class IncidentScoringEngine:
                 blast_radius = "SERVICE"
 
         elif finding.resource_type == "AwsS3Bucket":
-            if "prod" in finding.resource_id.lower() or "data" in finding.resource_id.lower():
+            if (
+                "prod" in finding.resource_id.lower()
+                or "data" in finding.resource_id.lower()
+            ):
                 current_score += 10.0
                 modifiers["critical_s3_data_store"] = +10.0
                 blast_radius = "SERVICE"

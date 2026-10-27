@@ -2,11 +2,13 @@
 
 from src.core.finding_parser import SecurityFinding
 from src.core.mitre_mapper import MitreMapper
-from src.core.scoring_engine import IncidentScoringEngine, IncidentPriority
+from src.core.scoring_engine import IncidentPriority, IncidentScoringEngine
 
 
 def test_mitre_mapper_exact_match():
-    mitre = MitreMapper.map_finding("UnauthorizedAccess:IAMUser/InstanceCredentialExfiltration")
+    mitre = MitreMapper.map_finding(
+        "UnauthorizedAccess:IAMUser/InstanceCredentialExfiltration"
+    )
     assert mitre.tactic == "Credential Access"
     assert mitre.tactic_id == "TA0006"
     assert mitre.technique_id == "T1528"

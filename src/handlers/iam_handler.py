@@ -3,9 +3,10 @@ IAM Incident Remediation Handler.
 Automated containment for compromised IAM credentials, active session revocation, and explicit deny-all isolation.
 """
 
-from datetime import datetime, timezone
 import json
+from datetime import datetime, timezone
 from typing import List, Optional
+
 import boto3
 from botocore.exceptions import ClientError
 
@@ -52,7 +53,10 @@ class IamRemediationHandler(BaseRemediationHandler):
                 RemediationAction(
                     action_name="RevokeActiveSTSSessions",
                     status="DRY_RUN",
-                    details={"revocation_timestamp": now_iso, "policy_doc": revoke_policy_doc},
+                    details={
+                        "revocation_timestamp": now_iso,
+                        "policy_doc": revoke_policy_doc,
+                    },
                 )
             )
         else:
@@ -66,7 +70,10 @@ class IamRemediationHandler(BaseRemediationHandler):
                     RemediationAction(
                         action_name="RevokeActiveSTSSessions",
                         status="SUCCESS",
-                        details={"revocation_timestamp": now_iso, "policy": revoke_policy_name},
+                        details={
+                            "revocation_timestamp": now_iso,
+                            "policy": revoke_policy_name,
+                        },
                     )
                 )
             except ClientError as e:
@@ -85,7 +92,9 @@ class IamRemediationHandler(BaseRemediationHandler):
         # -------------------------------------------------------------
         deactivated_keys: List[str] = []
         if self.dry_run:
-            target_key = finding.resource_tags.get("AccessKeyId", "AKIA_SIMULATED_KEY_123")
+            target_key = finding.resource_tags.get(
+                "AccessKeyId", "AKIA_SIMULATED_KEY_123"
+            )
             deactivated_keys.append(target_key)
             actions.append(
                 RemediationAction(
@@ -111,11 +120,16 @@ class IamRemediationHandler(BaseRemediationHandler):
                     RemediationAction(
                         action_name="DeactivateAccessKeys",
                         status="SUCCESS",
-                        details={"deactivated_keys": deactivated_keys, "count": len(deactivated_keys)},
+                        details={
+                            "deactivated_keys": deactivated_keys,
+                            "count": len(deactivated_keys),
+                        },
                     )
                 )
             except ClientError as e:
-                self.logger.error(f"Failed to deactivate access keys for {user_name}: {e}")
+                self.logger.error(
+                    f"Failed to deactivate access keys for {user_name}: {e}"
+                )
                 actions.append(
                     RemediationAction(
                         action_name="DeactivateAccessKeys",
@@ -166,7 +180,9 @@ class IamRemediationHandler(BaseRemediationHandler):
                     )
                 )
             except ClientError as e:
-                self.logger.error(f"Failed to attach quarantine policy to {user_name}: {e}")
+                self.logger.error(
+                    f"Failed to attach quarantine policy to {user_name}: {e}"
+                )
                 actions.append(
                     RemediationAction(
                         action_name="AttachQuarantineDenyPolicy",
@@ -182,7 +198,10 @@ class IamRemediationHandler(BaseRemediationHandler):
         quarantine_tags = [
             {"Key": "SOAR_Status", "Value": "Quarantined"},
             {"Key": "SOAR_IncidentId", "Value": finding.finding_id},
-            {"Key": "SOAR_ContainedAt", "Value": datetime.now(timezone.utc).isoformat()},
+            {
+                "Key": "SOAR_ContainedAt",
+                "Value": datetime.now(timezone.utc).isoformat(),
+            },
         ]
 
         if self.dry_run:

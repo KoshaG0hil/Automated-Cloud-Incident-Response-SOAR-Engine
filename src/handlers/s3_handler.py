@@ -3,9 +3,10 @@ S3 Incident Remediation Handler.
 Automated containment for public S3 buckets, object exfiltration, and insecure ACL exposure.
 """
 
-from datetime import datetime, timezone
 import json
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
+
 import boto3
 from botocore.exceptions import ClientError
 
@@ -23,7 +24,10 @@ class S3RemediationHandler(BaseRemediationHandler):
     def execute_containment(self, finding: SecurityFinding) -> ContainmentResult:
         bucket_name = finding.resource_id
         actions: List[RemediationAction] = []
-        evidence: Dict[str, Any] = {"bucket_name": bucket_name, "account_id": finding.account_id}
+        evidence: Dict[str, Any] = {
+            "bucket_name": bucket_name,
+            "account_id": finding.account_id,
+        }
         overall_success = True
 
         self.logger.info(
@@ -62,7 +66,9 @@ class S3RemediationHandler(BaseRemediationHandler):
                     )
                 )
             except ClientError as e:
-                self.logger.error(f"Failed to apply Public Access Block to {bucket_name}: {e}")
+                self.logger.error(
+                    f"Failed to apply Public Access Block to {bucket_name}: {e}"
+                )
                 actions.append(
                     RemediationAction(
                         action_name="EnforcePublicAccessBlock",
@@ -103,7 +109,9 @@ class S3RemediationHandler(BaseRemediationHandler):
                         RemediationAction(
                             action_name="ResetBucketAclToPrivate",
                             status="SKIPPED",
-                            details={"reason": "BucketOwnerEnforced (ACLs already disabled)"},
+                            details={
+                                "reason": "BucketOwnerEnforced (ACLs already disabled)"
+                            },
                         )
                     )
                 else:
@@ -159,7 +167,9 @@ class S3RemediationHandler(BaseRemediationHandler):
                     )
                 )
             except ClientError as e:
-                self.logger.error(f"Failed to put TLS quarantine policy on {bucket_name}: {e}")
+                self.logger.error(
+                    f"Failed to put TLS quarantine policy on {bucket_name}: {e}"
+                )
                 actions.append(
                     RemediationAction(
                         action_name="EnforceTLSQuarantinePolicy",
@@ -175,7 +185,10 @@ class S3RemediationHandler(BaseRemediationHandler):
         quarantine_tag_set = [
             {"Key": "SOAR_Status", "Value": "Remediated"},
             {"Key": "SOAR_IncidentId", "Value": finding.finding_id},
-            {"Key": "SOAR_RemediatedAt", "Value": datetime.now(timezone.utc).isoformat()},
+            {
+                "Key": "SOAR_RemediatedAt",
+                "Value": datetime.now(timezone.utc).isoformat(),
+            },
         ]
 
         if self.dry_run:

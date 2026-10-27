@@ -3,18 +3,23 @@ SOAR State Machine Orchestrator.
 Coordinates the end-to-end incident lifecycle: Ingestion -> MITRE Mapping -> Triage -> Containment -> Evidence Vault -> Alert.
 """
 
+import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
-import logging
 from typing import Any, Dict, List, Optional
+
 import boto3
 
 from ..core.finding_parser import FindingParser, SecurityFinding
 from ..core.mitre_mapper import MitreMapper, MitreTactics
-from ..core.scoring_engine import IncidentScoringEngine, TriageAssessment, IncidentPriority
+from ..core.scoring_engine import (
+    IncidentPriority,
+    IncidentScoringEngine,
+    TriageAssessment,
+)
 from ..handlers.base_handler import ContainmentResult, RemediationAction
-from ..handlers.iam_handler import IamRemediationHandler
 from ..handlers.ec2_handler import Ec2RemediationHandler
+from ..handlers.iam_handler import IamRemediationHandler
 from ..handlers.s3_handler import S3RemediationHandler
 from ..reporters.alert_dispatcher import AlertDispatcher, AlertNotification
 from ..reporters.evidence_vault import EvidenceVault, IncidentAuditReport
@@ -111,7 +116,9 @@ class SoarStateMachine:
                 finding_type=finding.finding_type,
                 resource_type=finding.resource_type,
                 resource_id=finding.resource_id,
-                containment_status="CONTAINED" if containment_result.success else "FAILED",
+                containment_status="CONTAINED"
+                if containment_result.success
+                else "FAILED",
                 dry_run=self.dry_run,
                 mitre_tactic=mitre_data.tactic,
                 mitre_technique=mitre_data.technique,
@@ -120,7 +127,9 @@ class SoarStateMachine:
             )
             dispatch_results = self.dispatcher.dispatch(alert_notification)
 
-            duration = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000.0
+            duration = (
+                datetime.now(timezone.utc) - start_time
+            ).total_seconds() * 1000.0
 
             results.append(
                 IncidentResponseResult(
@@ -143,7 +152,10 @@ class SoarStateMachine:
     ) -> ContainmentResult:
         """Selects and executes the appropriate service handler based on resource type."""
         # Check if containment should be skipped for low priority findings without auto-remediate
-        if not triage.auto_remediate_recommended and triage.priority == IncidentPriority.P4_LOW:
+        if (
+            not triage.auto_remediate_recommended
+            and triage.priority == IncidentPriority.P4_LOW
+        ):
             return ContainmentResult(
                 resource_type=finding.resource_type,
                 resource_id=finding.resource_id,
@@ -154,7 +166,9 @@ class SoarStateMachine:
                     RemediationAction(
                         action_name="LowPriorityAuditLogOnly",
                         status="SKIPPED",
-                        details={"reason": "P4_LOW priority below auto-containment threshold"},
+                        details={
+                            "reason": "P4_LOW priority below auto-containment threshold"
+                        },
                     )
                 ],
             )
@@ -166,7 +180,9 @@ class SoarStateMachine:
 
         elif finding.resource_type == "AwsEc2Instance":
             handler = Ec2RemediationHandler(
-                dry_run=self.dry_run, session=self.session, region=finding.region or self.region
+                dry_run=self.dry_run,
+                session=self.session,
+                region=finding.region or self.region,
             )
             return handler.execute_containment(finding)
 
