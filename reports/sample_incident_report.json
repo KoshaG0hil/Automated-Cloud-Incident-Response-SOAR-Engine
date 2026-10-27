@@ -1,0 +1,119 @@
+{
+  "incident_id": "guardduty-iam-exfil-98124",
+  "generated_at": "2026-10-26T20:15:30.124567+00:00",
+  "sha256_checksum": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "finding": {
+    "finding_id": "guardduty-iam-exfil-98124",
+    "source": "aws.guardduty",
+    "finding_type": "UnauthorizedAccess:IAMUser/InstanceCredentialExfiltration",
+    "title": "Compromised IAM Credentials Exfiltrated from External IP",
+    "description": "Credentials for IAM User 'deploy-pipeline-bot' were used from an unusual external IP address (198.51.100.44) known for anonymizing proxies.",
+    "severity": "CRITICAL",
+    "severity_score": 92.0,
+    "resource_type": "AwsIamUser",
+    "resource_id": "deploy-pipeline-bot",
+    "resource_arn": "arn:aws:iam::123456789012:user/deploy-pipeline-bot",
+    "account_id": "123456789012",
+    "region": "us-east-1",
+    "created_at": "2026-10-26T20:14:10.000Z",
+    "threat_actor_ip": "198.51.100.44",
+    "threat_actor_country": "Netherlands",
+    "threat_actor_city": "Amsterdam",
+    "resource_tags": {
+      "Environment": "Production",
+      "Owner": "DevOps",
+      "AccessKeyId": "AKIAIOSFODNN7EXAMPLE"
+    },
+    "is_production": true
+  },
+  "mitre": {
+    "tactic": "Credential Access",
+    "tactic_id": "TA0006",
+    "technique": "Steal Application Access Token",
+    "technique_id": "T1528",
+    "sub_technique_id": "",
+    "url": "https://attack.mitre.org/techniques/T1528/"
+  },
+  "triage": {
+    "priority": "P1_CRITICAL",
+    "composite_score": 100.0,
+    "auto_remediate_recommended": true,
+    "requires_human_approval": false,
+    "blast_radius": "SERVICE",
+    "score_breakdown": {
+      "base_severity_score": 92.0,
+      "severity_label": "CRITICAL",
+      "applied_modifiers": {
+        "production_environment": 15.0
+      },
+      "final_composite_score": 100.0
+    }
+  },
+  "containment": {
+    "resource_type": "AwsIamUser",
+    "resource_id": "deploy-pipeline-bot",
+    "success": true,
+    "dry_run": false,
+    "quarantine_applied": true,
+    "actions_executed": [
+      {
+        "action_name": "RevokeActiveSTSSessions",
+        "status": "SUCCESS",
+        "details": {
+          "revocation_timestamp": "2026-10-26T20:15:28Z",
+          "policy": "SOAR-RevokeOlderSessions"
+        },
+        "error": null,
+        "executed_at": "2026-10-26T20:15:28.214000+00:00"
+      },
+      {
+        "action_name": "DeactivateAccessKeys",
+        "status": "SUCCESS",
+        "details": {
+          "deactivated_keys": [
+            "AKIAIOSFODNN7EXAMPLE"
+          ],
+          "count": 1
+        },
+        "error": null,
+        "executed_at": "2026-10-26T20:15:28.912000+00:00"
+      },
+      {
+        "action_name": "AttachQuarantineDenyPolicy",
+        "status": "SUCCESS",
+        "details": {
+          "policy_name": "SOAR-CompromisedIdentity-Containment",
+          "mode": "Deny-All"
+        },
+        "error": null,
+        "executed_at": "2026-10-26T20:15:29.418000+00:00"
+      },
+      {
+        "action_name": "TagCompromisedPrincipal",
+        "status": "SUCCESS",
+        "details": {
+          "tags": [
+            {
+              "Key": "SOAR_Status",
+              "Value": "Quarantined"
+            },
+            {
+              "Key": "SOAR_IncidentId",
+              "Value": "guardduty-iam-exfil-98124"
+            }
+          ]
+        },
+        "error": null,
+        "executed_at": "2026-10-26T20:15:29.890000+00:00"
+      }
+    ],
+    "error_message": null,
+    "evidence_collected": {
+      "user_name": "deploy-pipeline-bot",
+      "account_id": "123456789012",
+      "deactivated_keys": [
+        "AKIAIOSFODNN7EXAMPLE"
+      ]
+    }
+  }
+}

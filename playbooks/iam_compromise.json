@@ -1,0 +1,57 @@
+{
+  "id": "PLAYBOOK-IAM-001",
+  "name": "Compromised IAM Identity & Credential Containment",
+  "version": "1.2.0",
+  "description": "Automated containment playbook for compromised IAM users, exposed access keys, or STS token exfiltration detected by GuardDuty or Security Hub.",
+  "severity_threshold": "HIGH",
+  "triggers": [
+    "UnauthorizedAccess:IAMUser/InstanceCredentialExfiltration",
+    "Stealth:IAMUser/CloudTrailLoggingDisabled",
+    "Stealth:IAMUser/PasswordPolicyChange",
+    "PenTest:IAMUser/KaliLinux",
+    "PrivilegeEscalation:IAMUser/AdministrativePermissionsGranted"
+  ],
+  "mitre_attack": {
+    "tactic": "Credential Access",
+    "tactic_id": "TA0006",
+    "technique": "Valid Accounts: Cloud Accounts",
+    "technique_id": "T1078.004"
+  },
+  "actions": [
+    {
+      "step": 1,
+      "name": "RevokeActiveSTSSessions",
+      "description": "Attaches an inline policy with an explicit Deny condition matching aws:CurrentTime < CurrentTimestamp to instantly invalidate all active temporary STS sessions.",
+      "criticality": "CRITICAL"
+    },
+    {
+      "step": 2,
+      "name": "DeactivateAccessKeys",
+      "description": "Enumerates all active IAM Access Keys for the compromised user and flips status to Inactive.",
+      "criticality": "HIGH"
+    },
+    {
+      "step": 3,
+      "name": "AttachQuarantineDenyPolicy",
+      "description": "Attaches the managed or inline explicit DenyAll policy SOAR-CompromisedIdentity-Containment to block all further AWS API calls.",
+      "criticality": "CRITICAL"
+    },
+    {
+      "step": 4,
+      "name": "ArchiveForensicEvidence",
+      "description": "Captures CloudTrail recent API activities for the principal, records cryptographic SHA-256 hash, and vaults to immutable S3 bucket.",
+      "criticality": "MEDIUM"
+    },
+    {
+      "step": 5,
+      "name": "DispatchSecOpsAlert",
+      "description": "Broadcasts incident metadata, containment timestamp, and manual investigation runbook link to Amazon SNS and SecOps Slack channel.",
+      "criticality": "HIGH"
+    }
+  ],
+  "recovery_procedure": [
+    "Rotate primary credentials and enforce hardware MFA on the user account.",
+    "Inspect CloudTrail logs for actions executed during the compromise window.",
+    "Remove the SOAR-CompromisedIdentity-Containment deny policy once account verification is complete."
+  ]
+}

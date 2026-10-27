@@ -1,0 +1,56 @@
+{
+  "id": "PLAYBOOK-S3-003",
+  "name": "Public S3 Bucket Lockdown & Data Exfiltration Mitigation",
+  "version": "1.1.0",
+  "description": "Automated remediation for S3 buckets exposed to the public internet or exhibiting anomalous large-scale object exfiltration patterns.",
+  "severity_threshold": "MEDIUM",
+  "triggers": [
+    "Policy:S3/BucketPublicReadWriteGranted",
+    "Policy:S3/BucketBlockPublicAccessDisabled",
+    "Exfiltration:S3/ObjectReads.Unusual",
+    "AnomalousBehavior:S3/BulkObjectRetrieval",
+    "SecurityHub:AWS-Foundational-Security-Best-Practices/v/1.0.0/S3.1"
+  ],
+  "mitre_attack": {
+    "tactic": "Exfiltration",
+    "tactic_id": "TA0010",
+    "technique": "Exfiltration Over Web Service: Exfiltration to Cloud Storage",
+    "technique_id": "T1567.002"
+  },
+  "actions": [
+    {
+      "step": 1,
+      "name": "ApplyBucketPublicAccessBlock",
+      "description": "Enforces all 4 Amazon S3 Public Access Block settings: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets.",
+      "criticality": "CRITICAL"
+    },
+    {
+      "step": 2,
+      "name": "ResetBucketAclToPrivate",
+      "description": "Replaces public or authenticated-users grants with private bucket ACL.",
+      "criticality": "HIGH"
+    },
+    {
+      "step": 3,
+      "name": "ApplyQuarantineBucketPolicy",
+      "description": "Overwrites or amends bucket policy to restrict read/write access solely to AWS account root or approved administrative roles over TLS.",
+      "criticality": "HIGH"
+    },
+    {
+      "step": 4,
+      "name": "RecordRemediationAuditEvidence",
+      "description": "Captures pre- and post-remediation bucket configuration and stores tamper-evident evidence in S3 evidence vault.",
+      "criticality": "MEDIUM"
+    },
+    {
+      "step": 5,
+      "name": "DispatchSecOpsAlert",
+      "description": "Sends immediate notification to cloud operations and data governance teams detailing the remediated bucket.",
+      "criticality": "HIGH"
+    }
+  ],
+  "recovery_procedure": [
+    "Verify whether sensitive PII or corporate data was accessed while the bucket was publicly accessible via S3 server access logs / CloudTrail data events.",
+    "Engage data owner to establish approved least-privilege bucket policy if external partner sharing is required."
+  ]
+}

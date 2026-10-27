@@ -1,0 +1,57 @@
+{
+  "id": "PLAYBOOK-EC2-002",
+  "name": "Compromised EC2 Host Isolation & Forensics Capture",
+  "version": "1.3.0",
+  "description": "Automated network containment and forensic snapshotting for EC2 instances exhibiting command-and-control communication, trojan activity, or cryptocurrency mining.",
+  "severity_threshold": "HIGH",
+  "triggers": [
+    "Trojan:EC2/BlackholeTraffic",
+    "CryptoCurrency:EC2/BitcoinTool.B!DNS",
+    "Backdoor:EC2/Spambot",
+    "UnauthorizedAccess:EC2/MaliciousIPCaller.Custom",
+    "Impact:EC2/AbusiveTraffic"
+  ],
+  "mitre_attack": {
+    "tactic": "Command and Control",
+    "tactic_id": "TA0011",
+    "technique": "Application Layer Protocol: Web Protocols",
+    "technique_id": "T1071.001"
+  },
+  "actions": [
+    {
+      "step": 1,
+      "name": "CaptureHostMetadata",
+      "description": "Harvests instance metadata, VPC ID, subnet ID, public/private IP addresses, and attached ENIs prior to isolation.",
+      "criticality": "MEDIUM"
+    },
+    {
+      "step": 2,
+      "name": "CreateForensicEBSSnapshots",
+      "description": "Iterates through all attached EBS volumes (Root + Data) and initiates AWS EBS snapshots tagged with Incident ID and ForensicChainOfCustody metadata.",
+      "criticality": "CRITICAL"
+    },
+    {
+      "step": 3,
+      "name": "IsolateNetworkPerimeter",
+      "description": "Detaches existing Security Groups and binds the instance exclusively to the SOAR-Isolation-SG (0 Inbound, 0 Outbound rules).",
+      "criticality": "CRITICAL"
+    },
+    {
+      "step": 4,
+      "name": "ApplyQuarantineTags",
+      "description": "Applies resource tags: SOAR_Status=Quarantined, SOAR_IsolatedAt=<timestamp>, SOAR_IncidentId=<id>.",
+      "criticality": "LOW"
+    },
+    {
+      "step": 5,
+      "name": "DispatchSecOpsAlert",
+      "description": "Dispatches high-priority alert with forensic snapshot IDs and isolation confirmation to SecOps responders.",
+      "criticality": "HIGH"
+    }
+  ],
+  "recovery_procedure": [
+    "Mount the forensic EBS snapshots to an isolated sandbox analysis EC2 instance for reverse malware analysis.",
+    "Inspect instance memory dump and disk logs for rootkits or persistence mechanisms.",
+    "Terminate or rebuild the compromised host from golden AMI baseline."
+  ]
+}
